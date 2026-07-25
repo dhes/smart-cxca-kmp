@@ -1,0 +1,37 @@
+[versions]
+kotlin = "2.3.21"
+android-gradle-plugin = "8.13.0"
+ohs-fhir-model = "1.0.0-beta05"
+ohs-fhir-path = "1.0.0-beta03"
+ohs-fhir-engine = "2.0.0-alpha01"
+kotlinx-coroutines = "1.10.2"
+kotlinx-datetime = "0.6.2"
+kotlinx-serialization = "1.8.0"
+kotest = "6.2.0"
+composeMultiplatform = "1.11.0"
+kermit = "2.0.8"
+spotless = "8.4.0"
+kt-lint = "1.8.0"
+
+[libraries]
+ohs-fhir-model = { module = "dev.ohs.fhir:fhir-model", version.ref = "ohs-fhir-model" }
+ohs-fhir-path = { module = "dev.ohs.fhir:fhir-path", version.ref = "ohs-fhir-path" }
+ohs-fhir-engine = { module = "dev.ohs.fhir:fhir-engine", version.ref = "ohs-fhir-engine" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
+kotlinx-coroutines-swing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-swing", version.ref = "kotlinx-coroutines" }
+kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinx-coroutines" }
+kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
+kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
+kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
+androidx-activity-compose = { module = "androidx.activity:activity-compose", version = "1.9.3" }
+kermit = { module = "co.touchlab:kermit", version.ref = "kermit" }
+
+[plugins]
+kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+android-kotlin-multiplatform-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "android-gradle-plugin" }
+android-application = { id = "com.android.application", version.ref = "android-gradle-plugin" }
+compose-multiplatform = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }
+compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }

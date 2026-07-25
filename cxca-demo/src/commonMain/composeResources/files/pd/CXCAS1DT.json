@@ -1,0 +1,34 @@
+{
+    "resourceType": "PlanDefinition",
+    "id": "CXCAS1DT",
+    "url": "http://hopena.health/cxca-kmp/PlanDefinition/CXCAS1DT",
+    "name": "CXCAS1DT",
+    "title": "CXCA.S1.DT Determine cervical cancer screening eligibility (FHIRPath re-authoring)",
+    "status": "active",
+    "experimental": true,
+    "description": "FHIRPath re-authoring of the smart-cxca CXCA.S1.DT decision table (CXCAEligibilityLogic CQL library) for kotlin-fhir-workflow, which evaluates text/fhirpath only. Inputs are prefetched by the consumer and bound as collection Bundles: %conditions (the client's Conditions) and %observations (the client's Observations). Eligibility: has cervix (female, minus congenital absence 37687000 and total hysterectomy 428078001) and age within the risk-group range (start 25 if living with HIV per SNOMED 165816005 observation, else 30; upper bound 65).",
+    "action": [
+        {
+            "id": "s1-communicate-eligibility",
+            "title": "Communicate the eligibility determination to the health worker",
+            "textEquivalent": "Determine cervical cancer screening eligibility and communicate the determination",
+            "definitionCanonical": "http://hopena.health/cxca-kmp/ActivityDefinition/CommunicateEligibility",
+            "dynamicValue": [
+                {
+                    "path": "reasonCode[0].text",
+                    "expression": {
+                        "language": "text/fhirpath",
+                        "expression": "iif((gender = 'female' and %conditions.entry.resource.where(code.coding.where(system = 'http://snomed.info/sct' and (code = '37687000' or code = '428078001')).exists()).empty()) and iif(%observations.entry.resource.where((status = 'final' or status = 'amended') and code.coding.where(system = 'http://snomed.info/sct' and code = '165816005').exists()).exists(), birthDate <= today() - 25 years, birthDate <= today() - 30 years) and (birthDate > today() - 66 years), 'Eligible', 'Not eligible')"
+                    }
+                },
+                {
+                    "path": "payload[0].contentString",
+                    "expression": {
+                        "language": "text/fhirpath",
+                        "expression": "iif((gender = 'female' and %conditions.entry.resource.where(code.coding.where(system = 'http://snomed.info/sct' and (code = '37687000' or code = '428078001')).exists()).empty()).not(), 'Client is not in the cervical cancer screening population (no cervix on record); screening is not applicable.', iif(iif(%observations.entry.resource.where((status = 'final' or status = 'amended') and code.coding.where(system = 'http://snomed.info/sct' and code = '165816005').exists()).exists(), birthDate <= today() - 25 years, birthDate <= today() - 30 years).not(), 'Client has not yet reached the screening start age for their risk group (25 years for women living with HIV, otherwise 30 years); they become eligible at that age. Not yet eligible.', iif((birthDate > today() - 66 years).not(), 'Client is above the recommended screening age range; routine screening is not indicated (assuming adequate prior screening).', 'Client is in the cervical cancer screening target population. Proceed to determine whether screening is due.')))"
+                    }
+                }
+            ]
+        }
+    ]
+}

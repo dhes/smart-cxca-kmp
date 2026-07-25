@@ -1,0 +1,11 @@
+{
+    "resourceType": "Condition",
+    "id": "cxca-hyst-45-hysterectomy",
+    "clinicalStatus": {
+        "coding": [{"system": "http://terminology.hl7.org/CodeSystem/condition-clinical", "code": "active"}]
+    },
+    "code": {
+        "coding": [{"system": "http://snomed.info/sct", "code": "428078001", "display": "History of total hysterectomy (situation)"}]
+    },
+    "subject": {"reference": "Patient/cxca-hyst-45"}
+}

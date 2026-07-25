@@ -1,0 +1,8 @@
+{
+    "resourceType": "Patient",
+    "id": "cxca-gen-45",
+    "active": true,
+    "name": [{"family": "Okonkwo", "given": ["Chidinma"]}],
+    "gender": "female",
+    "birthDate": "1981-02-02"
+}

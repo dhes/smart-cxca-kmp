@@ -1,0 +1,8 @@
+{
+    "resourceType": "Patient",
+    "id": "cxca-hyst-45",
+    "active": true,
+    "name": [{"family": "Dlamini", "given": ["Dineo"]}],
+    "gender": "female",
+    "birthDate": "1981-05-20"
+}

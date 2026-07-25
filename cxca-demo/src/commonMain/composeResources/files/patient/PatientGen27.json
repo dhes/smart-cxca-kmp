@@ -1,0 +1,8 @@
+{
+    "resourceType": "Patient",
+    "id": "cxca-gen-27",
+    "active": true,
+    "name": [{"family": "Wanjiru", "given": ["Beatrice"]}],
+    "gender": "female",
+    "birthDate": "1999-03-10"
+}

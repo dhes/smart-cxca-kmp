@@ -1,0 +1,14 @@
+{
+    "resourceType": "ActivityDefinition",
+    "id": "CommunicateEligibility",
+    "url": "http://hopena.health/cxca-kmp/ActivityDefinition/CommunicateEligibility",
+    "name": "CommunicateEligibility",
+    "title": "Communicate cervical cancer screening eligibility",
+    "status": "active",
+    "experimental": true,
+    "description": "Communicate the CXCA.S1.DT eligibility determination and its guidance to the health worker.",
+    "kind": "CommunicationRequest",
+    "profile": "http://hl7.org/fhir/uv/cpg/StructureDefinition/cpg-communicationrequest",
+    "intent": "proposal",
+    "priority": "routine"
+}
