@@ -20,6 +20,43 @@ configurations.all {
   }
 }
 
+// Chunk the FHIR modelinfo XML into generated Kotlin string constants for commonTest: JVM class
+// files cap string constants at 64 KB (modified UTF-8), so ~20k-char chunks keep every target
+// happy. Consumers of the library still pass the modelinfo in as a plain String.
+val generateModelInfoKt =
+  tasks.register("generateModelInfoKt") {
+    val xmlFile = layout.projectDirectory.file("modelinfo/fhir-modelinfo-4.0.1.xml")
+    val outDir = layout.buildDirectory.dir("generated/modelinfo/kotlin")
+    inputs.file(xmlFile)
+    outputs.dir(outDir)
+    doLast {
+      val chunks = xmlFile.asFile.readText().chunked(20_000)
+      val escaped =
+        chunks.map {
+          it.replace("\\", "\\\\")
+            .replace("\"", "\\\"")
+            .replace("$", "\\$")
+            .replace("\r", "\\r")
+            .replace("\n", "\\n")
+            .replace("\t", "\\t")
+        }
+      val out = outDir.get().file("FhirModelInfo.kt").asFile
+      out.parentFile.mkdirs()
+      out.writeText(
+        buildString {
+          appendLine("package health.hopena.cxca.cql")
+          appendLine()
+          appendLine("// GENERATED from modelinfo/fhir-modelinfo-4.0.1.xml — do not edit.")
+          escaped.forEachIndexed { i, c -> appendLine("private const val MI_$i = \"$c\"") }
+          appendLine()
+          appendLine("internal val FHIR_MODELINFO_401_XML: String = buildString {")
+          chunks.indices.forEach { appendLine("  append(MI_$it)") }
+          appendLine("}")
+        }
+      )
+    }
+  }
+
 kotlin {
   jvmToolchain(21)
 
@@ -31,7 +68,12 @@ kotlin {
 
   jvm("desktop")
 
-  @OptIn(ExperimentalWasmDsl::class) wasmJs { nodejs() }
+  @OptIn(ExperimentalWasmDsl::class)
+  wasmJs {
+    // Compiling the CQL library + parsing the 4 MB modelinfo is slow under Node; mocha's 2 s
+    // default per-test timeout is far too tight.
+    nodejs { testTask { useMocha { timeout = "300s" } } }
+  }
 
   sourceSets {
     commonMain.dependencies {
@@ -44,9 +86,10 @@ kotlin {
       implementation("org.cqframework:engine:$cqlVersion")
       implementation("org.cqframework:engine-fhir:$cqlVersion")
     }
-    // Tests live in desktopTest (not commonTest) because they read the 4 MB FHIR modelinfo from
-    // the JVM classpath; consumers on other platforms supply it as a resource string instead.
-    val desktopTest by getting {
+    commonTest {
+      // The FHIR modelinfo as generated Kotlin constants — the one way to hand 4 MB of XML to
+      // every target (wasm has no classpath). See generateModelInfoKt below.
+      kotlin.srcDir(generateModelInfoKt)
       dependencies {
         implementation(libs.kotlin.test)
         implementation(libs.kotlinx.coroutines.test)

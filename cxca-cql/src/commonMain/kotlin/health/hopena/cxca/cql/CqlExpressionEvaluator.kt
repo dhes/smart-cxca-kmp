@@ -78,6 +78,9 @@ class CqlExpressionEvaluator(
 
   private val modelManager =
     ModelManager().apply {
+      // On the JVM the System model provider auto-registers via ServiceLoader; wasm/js have no
+      // ServiceLoader, so register it explicitly (harmless where it is already present).
+      modelInfoLoader.registerModelInfoProvider(org.hl7.cql.model.SystemModelInfoProvider())
       modelInfoLoader.registerModelInfoProvider(
         object : ModelInfoProvider {
           override fun load(modelIdentifier: ModelIdentifier): ModelInfo? =

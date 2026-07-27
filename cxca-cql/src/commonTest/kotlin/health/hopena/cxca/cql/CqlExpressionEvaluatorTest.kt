@@ -76,6 +76,14 @@ private val VALUE_SETS =
        "compose":{"include":[{"system":"http://snomed.info/sct","concept":[{"code":"428078001"}]}]}}""",
   )
 
+/**
+ * One evaluator for the whole suite: compiling the CQL library and parsing the 4 MB modelinfo per
+ * test is what blows wasm test times; evaluate() itself builds fresh providers per call.
+ */
+private val sharedEvaluator by lazy {
+  CqlExpressionEvaluator(ELIGIBILITY_CQL, VALUE_SETS, FHIR_MODELINFO_401_XML)
+}
+
 class CqlExpressionEvaluatorTest {
 
   private val json = Json {
@@ -86,14 +94,7 @@ class CqlExpressionEvaluatorTest {
 
   private fun resource(text: String): Resource = json.decodeFromString(Resource.serializer(), text)
 
-  private fun modelInfoXml(): String =
-    checkNotNull(javaClass.classLoader.getResourceAsStream("fhir-modelinfo-4.0.1.xml")) {
-        "fhir-modelinfo-4.0.1.xml not on test classpath"
-      }
-      .bufferedReader()
-      .readText()
-
-  private fun evaluator() = CqlExpressionEvaluator(ELIGIBILITY_CQL, VALUE_SETS, modelInfoXml())
+  private fun evaluator() = sharedEvaluator
 
   private fun patient(id: String, birthDate: String) =
     resource(
@@ -189,6 +190,42 @@ class CqlExpressionEvaluatorTest {
           ),
         )
     assertEquals(true, result.asBoolean())
+  }
+
+  @Test
+  fun shouldParseModelInfoOnThisTarget() {
+    // Surfaces the real per-target failure that ModelManager's catch-all otherwise hides as
+    // "Could not load model information".
+    val info = org.hl7.elm_modelinfo.r1.serializing.parseModelInfoXml(FHIR_MODELINFO_401_XML)
+    assertEquals("FHIR", info.name)
+  }
+
+  @Test
+  fun shouldResolveFhirModelOnThisTarget() {
+    val manager =
+      org.cqframework.cql.cql2elm.ModelManager().apply {
+        // No ServiceLoader off the JVM: the System model provider must be explicit.
+        modelInfoLoader.registerModelInfoProvider(org.hl7.cql.model.SystemModelInfoProvider())
+        modelInfoLoader.registerModelInfoProvider(
+          object : org.hl7.cql.model.ModelInfoProvider {
+            override fun load(
+              modelIdentifier: org.hl7.cql.model.ModelIdentifier
+            ): org.hl7.elm_modelinfo.r1.ModelInfo? =
+              if (modelIdentifier.id == "FHIR") {
+                org.hl7.elm_modelinfo.r1.serializing.parseModelInfoXml(FHIR_MODELINFO_401_XML)
+              } else null
+          }
+        )
+      }
+    try {
+      val model = manager.resolveModel("FHIR", "4.0.1")
+      assertEquals("FHIR", model.modelInfo.name)
+    } catch (e: Throwable) {
+      val chain = generateSequence<Throwable>(e) { it.cause }.joinToString(" <- ") {
+        "${it::class.simpleName}: ${it.message?.take(160)}"
+      }
+      throw AssertionError("resolveModel failed: $chain")
+    }
   }
 
   @Test
