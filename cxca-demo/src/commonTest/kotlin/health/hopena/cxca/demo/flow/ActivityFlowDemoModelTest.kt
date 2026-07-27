@@ -166,6 +166,21 @@ class ActivityFlowDemoModelTest {
   }
 
   @Test
+  fun shouldDetermineEligibilityViaRealCqlWhenPlatformSupportsIt() = runTest {
+    // The same determinations, evaluated as REAL CQL (near-verbatim CXCAEligibilityLogic)
+    // through the workflow seam. Skipped where the platform lacks the CQL engine (iOS).
+    if (!cqlSupported) return@runTest
+
+    val (status, guidance) = determination(WLHIV_27_CQL)
+    assertEquals("Eligible", status)
+    assertTrue(guidance.contains("Proceed to determine whether screening is due"))
+
+    val (hystStatus, hystGuidance) = determination(HYSTERECTOMY_45_CQL)
+    assertEquals("Not eligible", hystStatus)
+    assertTrue(hystGuidance.contains("no cervix on record"))
+  }
+
+  @Test
   fun shouldDetermineNotEligibleWhenGeneralPopulationAge27() = runTest {
     // General population start age is 30; 27 is below it.
     val (status, guidance) = determination(GENERAL_27)

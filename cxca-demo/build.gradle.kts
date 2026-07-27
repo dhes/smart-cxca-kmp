@@ -4,6 +4,15 @@ import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.plugin.KotlinHierarchyTemplate
 
+// cql-to-elm (via cxca-cql) is compiled against antlr-kotlin 1.0.3; fhir-path pulls the
+// binary-incompatible 1.0.10. The app module assembles the runtime classpath, so pin here too.
+configurations.all {
+  resolutionStrategy {
+    force("com.strumenta:antlr-kotlin-runtime:1.0.3")
+    force("com.strumenta:antlr-kotlin-runtime-jvm:1.0.3")
+  }
+}
+
 plugins {
   alias(libs.plugins.kotlin.multiplatform)
   alias(libs.plugins.android.application)
@@ -24,7 +33,13 @@ android {
   }
 
   buildTypes { getByName("release") { isMinifyEnabled = false } }
-  packaging { resources { excludes += "/META-INF/{AL2.0,LGPL2.1}" } }
+  packaging {
+    resources {
+      excludes += "/META-INF/{AL2.0,LGPL2.1}"
+      // The CQL stack (jvm variants) drags Apache HTTP client jars whose META-INF files collide.
+      excludes += "/META-INF/{DEPENDENCIES,LICENSE,LICENSE.txt,NOTICE,NOTICE.txt,INDEX.LIST}"
+    }
+  }
   compileOptions {
     sourceCompatibility = JavaVersion.VERSION_21
     targetCompatibility = JavaVersion.VERSION_21
@@ -102,6 +117,8 @@ kotlin {
       // See
       // https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-dispatchers/-main.html
       implementation(libs.kotlinx.coroutines.android)
+      // CQL evaluation (no iOS target upstream, so this cannot live in commonMain).
+      implementation(project(":cxca-cql"))
     }
     val desktopMain by getting {
       dependencies {
@@ -111,8 +128,10 @@ kotlin {
         // See
         // https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-dispatchers/-main.html
         implementation(libs.kotlinx.coroutines.swing)
+        implementation(project(":cxca-cql"))
       }
     }
+    val wasmJsMain by getting { dependencies { implementation(project(":cxca-cql")) } }
     commonTest.dependencies {
       implementation(libs.kotlin.test)
       implementation(libs.kotlinx.coroutines.test)
@@ -122,7 +141,7 @@ kotlin {
 
 compose.desktop {
   application {
-    mainClass = "dev.ohs.fhir.workflow.demo.MainKt"
+    mainClass = "health.hopena.cxca.demo.MainKt"
     nativeDistributions {
       targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
       packageName = "kotlin-fhir-workflow-demo"

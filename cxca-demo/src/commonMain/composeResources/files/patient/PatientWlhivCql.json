@@ -1,0 +1,8 @@
+{
+    "resourceType": "Patient",
+    "id": "cxca-cql-wlhiv-27",
+    "active": true,
+    "name": [{"family": "Achieng", "given": ["Amina"]}],
+    "gender": "female",
+    "birthDate": "1999-01-15"
+}

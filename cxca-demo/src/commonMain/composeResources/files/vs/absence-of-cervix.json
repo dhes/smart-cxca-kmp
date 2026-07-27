@@ -1,0 +1,3 @@
+{"resourceType":"ValueSet","id":"absence-of-cervix","status":"active",
+ "url":"http://smart.who.int/cxca/ValueSet/absence-of-cervix",
+ "compose":{"include":[{"system":"http://snomed.info/sct","concept":[{"code":"37687000"}]}]}}

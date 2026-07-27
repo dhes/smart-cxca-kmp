@@ -23,6 +23,7 @@ import dev.ohs.fhir.model.r4.Patient
 import dev.ohs.fhir.model.r4.Resource
 import dev.ohs.fhir.model.r4.String as FhirString
 import dev.ohs.fhir.workflow.activity.resource.request.CPGCommunicationRequest
+import dev.ohs.fhir.workflow.expression.ExpressionEvaluatorRouter
 import dev.ohs.fhir.workflow.operation.FhirOperator
 import dev.ohs.fhir.workflow.repository.WorkflowRepository
 import kotlin.time.Clock
@@ -45,7 +46,29 @@ class ProposalCreationHandler(
   private val assets: AssetReader = bundledAssets,
   private val today: LocalDate = Clock.System.todayIn(TimeZone.currentSystemDefault()),
 ) {
-  private val operator = FhirOperator(repository)
+  private val operators = mutableMapOf<String, FhirOperator>()
+
+  /**
+   * FHIRPath scenarios use the default router; CQL scenarios route text/cql to the platform's
+   * CQL evaluator (cxca-cql over the cqframework v5 engine), built once per configuration —
+   * constructing it compiles the CQL library and parses the FHIR modelinfo.
+   */
+  private suspend fun operatorFor(configuration: DemoConfiguration): FhirOperator =
+    operators.getOrPut(configuration.id) {
+      val cqlEvaluator =
+        configuration.cql?.let { scenario ->
+          createCqlEvaluator(
+            cqlLibrarySource = assets(scenario.cqlLibraryPath),
+            valueSetJsons = scenario.valueSetPaths.map { assets(it) },
+            modelInfoXml = assets(scenario.modelInfoPath),
+          )
+        }
+      if (cqlEvaluator != null) {
+        FhirOperator(repository, ExpressionEvaluatorRouter(elm = cqlEvaluator))
+      } else {
+        FhirOperator(repository)
+      }
+    }
 
   /**
    * True once [installDependencies] has put the configuration's PlanDefinition AND its patient in
@@ -83,7 +106,7 @@ class ProposalCreationHandler(
         ?: error("Patient/${configuration.patientId} is not installed")
 
     val carePlan =
-      operator.generateCarePlan(
+      operatorFor(configuration).generateCarePlan(
         planDefinitionCanonical = configuration.planDefinitionCanonical,
         subject = patient,
         variables =

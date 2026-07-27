@@ -30,6 +30,19 @@ data class DemoConfiguration(
   val planDefinitionCanonical: String,
   val activityDefinitionPath: String,
   val additionalResourcePaths: List<String> = emptyList(),
+  /** Present when the scenario's PlanDefinition expressions are text/cql — see [CqlScenario]. */
+  val cql: CqlScenario? = null,
+)
+
+/**
+ * The assets a CQL-evaluated scenario needs: the library the PlanDefinition's text/cql define
+ * names resolve against, the ValueSets its `valueset` declarations expand from, and the FHIR
+ * modelinfo the compiler and data providers share.
+ */
+data class CqlScenario(
+  val cqlLibraryPath: String,
+  val valueSetPaths: List<String>,
+  val modelInfoPath: String = "files/modelinfo/fhir-modelinfo-4.0.1.xml",
 )
 
 private const val CXCA_S1_PD = "files/pd/CXCAS1DT.json"
@@ -90,4 +103,52 @@ val HYSTERECTOMY_45 =
     additionalResourcePaths = listOf("files/patient/ConditionHystHyst45.json"),
   )
 
-val DEMO_CONFIGURATIONS = listOf(WLHIV_27, GENERAL_27, GENERAL_45, HYSTERECTOMY_45)
+private val CXCA_S1_CQL_SCENARIO =
+  CqlScenario(
+    cqlLibraryPath = "files/cql/CXCAEligibilityLogic.cql",
+    valueSetPaths =
+      listOf(
+        "files/vs/hiv-positive-status.json",
+        "files/vs/absence-of-cervix.json",
+        "files/vs/total-hysterectomy.json",
+      ),
+  )
+
+private const val CXCA_S1_CQL_PD = "files/pd/CXCAS1DTCql.json"
+private const val CXCA_S1_CQL_PD_CANONICAL =
+  "http://hopena.health/cxca-kmp/PlanDefinition/CXCAS1DTCql"
+
+/** WLHIV, 27 — the same determination as [WLHIV_27], evaluated as REAL CQL. */
+val WLHIV_27_CQL =
+  DemoConfiguration(
+    id = "id_cxca_cql_wlhiv_27",
+    description = "WLHIV, 27 — Eligible (CQL)",
+    patientId = "cxca-cql-wlhiv-27",
+    patientName = "Amina Achieng (27, WLHIV) — CQL",
+    patientPath = "files/patient/PatientWlhivCql.json",
+    planDefinitionPath = CXCA_S1_CQL_PD,
+    planDefinitionCanonical = CXCA_S1_CQL_PD_CANONICAL,
+    activityDefinitionPath = CXCA_S1_AD,
+    additionalResourcePaths = listOf("files/patient/ObservationHivWlhivCql.json"),
+    cql = CXCA_S1_CQL_SCENARIO,
+  )
+
+/** Post-hysterectomy, 45 — the cervix-exclusion arm, evaluated as REAL CQL. */
+val HYSTERECTOMY_45_CQL =
+  DemoConfiguration(
+    id = "id_cxca_cql_hyst_45",
+    description = "Post-hysterectomy, 45 — Not eligible (CQL)",
+    patientId = "cxca-cql-hyst-45",
+    patientName = "Dineo Dlamini (45, post-hysterectomy) — CQL",
+    patientPath = "files/patient/PatientHystCql.json",
+    planDefinitionPath = CXCA_S1_CQL_PD,
+    planDefinitionCanonical = CXCA_S1_CQL_PD_CANONICAL,
+    activityDefinitionPath = CXCA_S1_AD,
+    additionalResourcePaths = listOf("files/patient/ConditionHystCql.json"),
+    cql = CXCA_S1_CQL_SCENARIO,
+  )
+
+/** CQL scenarios appear only where the platform has the engine (see [cqlSupported]). */
+val DEMO_CONFIGURATIONS: List<DemoConfiguration> =
+  listOf(WLHIV_27, GENERAL_27, GENERAL_45, HYSTERECTOMY_45) +
+    (if (cqlSupported) listOf(WLHIV_27_CQL, HYSTERECTOMY_45_CQL) else emptyList())

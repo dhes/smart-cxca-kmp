@@ -1,0 +1,34 @@
+{
+    "resourceType": "PlanDefinition",
+    "id": "CXCAS1DTCql",
+    "url": "http://hopena.health/cxca-kmp/PlanDefinition/CXCAS1DTCql",
+    "name": "CXCAS1DTCql",
+    "title": "CXCA.S1.DT Determine cervical cancer screening eligibility (CQL)",
+    "status": "active",
+    "experimental": true,
+    "description": "The S1 decision table with its logic evaluated as REAL CQL: the dynamicValue expressions use text/cql whose text names a define in CXCAEligibilityLogic (near-verbatim from the WHO DAK), evaluated by the cqframework v5 KMP engine through the workflow library's ExpressionEvaluator seam. Compare with CXCAS1DT, the FHIRPath re-authoring of the same table.",
+    "action": [
+        {
+            "id": "s1-communicate-eligibility-cql",
+            "title": "Communicate the eligibility determination to the health worker",
+            "textEquivalent": "Determine cervical cancer screening eligibility (CQL) and communicate the determination",
+            "definitionCanonical": "http://hopena.health/cxca-kmp/ActivityDefinition/CommunicateEligibility",
+            "dynamicValue": [
+                {
+                    "path": "reasonCode[0].text",
+                    "expression": {
+                        "language": "text/cql",
+                        "expression": "Eligibility status"
+                    }
+                },
+                {
+                    "path": "payload[0].contentString",
+                    "expression": {
+                        "language": "text/cql",
+                        "expression": "Guidance"
+                    }
+                }
+            ]
+        }
+    ]
+}

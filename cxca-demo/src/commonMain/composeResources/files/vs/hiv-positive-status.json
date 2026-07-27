@@ -1,0 +1,3 @@
+{"resourceType":"ValueSet","id":"hiv-positive-status","status":"active",
+ "url":"http://smart.who.int/cxca/ValueSet/hiv-positive-status",
+ "compose":{"include":[{"system":"http://snomed.info/sct","concept":[{"code":"165816005"}]}]}}
