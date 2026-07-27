@@ -1,0 +1,212 @@
+/*
+ * Copyright 2026 Open Health Stack Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package health.hopena.cxca.cql
+
+import dev.ohs.fhir.model.r4.Bundle
+import dev.ohs.fhir.model.r4.Resource
+import dev.ohs.fhir.workflow.expression.EvaluationContext
+import dev.ohs.fhir.workflow.expression.EvaluationResult
+import dev.ohs.fhir.workflow.expression.ExpressionEvaluator
+import dev.ohs.fhir.workflow.expression.ProtocolExpression
+import kotlinx.io.Buffer
+import kotlinx.io.writeString
+import kotlinx.serialization.json.Json
+import org.cqframework.cql.cql2elm.CqlCompilerOptions
+import org.cqframework.cql.cql2elm.LibraryContentType
+import org.cqframework.cql.cql2elm.LibraryManager
+import org.cqframework.cql.cql2elm.LibrarySourceProvider
+import org.cqframework.cql.cql2elm.ModelManager
+import org.hl7.cql.model.ModelIdentifier
+import org.hl7.cql.model.ModelInfoProvider
+import org.hl7.elm.r1.VersionedIdentifier
+import org.hl7.elm_modelinfo.r1.ModelInfo
+import org.hl7.elm_modelinfo.r1.serializing.parseModelInfoXml
+import org.opencds.cqf.cql.engine.data.CompositeDataProvider
+import org.opencds.cqf.cql.engine.data.DataProvider
+import org.opencds.cqf.cql.engine.execution.CqlEngine
+import org.opencds.cqf.cql.engine.execution.Environment
+import org.opencds.cqf.cql.engine.fhir.fhirModelNamespaceUri
+import org.opencds.cqf.cql.engine.fhir.model.SimpleFhirModelResolver
+import org.opencds.cqf.cql.engine.fhir.parser.fhirResourceJsonToCqlValue
+import org.opencds.cqf.cql.engine.fhir.retrieve.SimpleFhirRetrieveProvider
+import org.opencds.cqf.cql.engine.fhir.terminology.SimpleFhirTerminologyProvider
+import org.opencds.cqf.cql.engine.runtime.Value
+
+/**
+ * A CQL implementation of the workflow library's [ExpressionEvaluator] seam, backed by the
+ * cqframework v5 KMP engine and the PR #1815 FHIR providers.
+ *
+ * Contract with the PlanDefinition author: expressions use language `text/cql` and their text is
+ * the NAME OF A DEFINE in [cqlLibrarySource] (kotlin-fhir-workflow's processor routes `text/cql`
+ * text to the ELM seam verbatim; `text/cql-identifier` is not yet mapped upstream). The library
+ * is compiled once and cached; per evaluation, the subject and every Bundle-typed prefetch
+ * variable in the [EvaluationContext] are merged into one data bundle the engine retrieves from.
+ */
+class CqlExpressionEvaluator(
+  private val cqlLibrarySource: String,
+  valueSetJsons: List<String>,
+  modelInfoXml: String,
+) : ExpressionEvaluator {
+
+  private val json = Json {
+    ignoreUnknownKeys = true
+    encodeDefaults = false
+    explicitNulls = false
+  }
+
+  private val libraryIdentifier: VersionedIdentifier = run {
+    val match =
+      Regex("""library\s+(\w+)(?:\s+version\s+'([^']+)')?""").find(cqlLibrarySource)
+        ?: error("cqlLibrarySource has no library declaration")
+    VersionedIdentifier().withId(match.groupValues[1]).withVersion(
+      match.groupValues[2].ifEmpty { null }
+    )
+  }
+
+  private val modelManager =
+    ModelManager().apply {
+      modelInfoLoader.registerModelInfoProvider(
+        object : ModelInfoProvider {
+          override fun load(modelIdentifier: ModelIdentifier): ModelInfo? =
+            if (modelIdentifier.id == "FHIR") {
+              parseModelInfoXml(Buffer().apply { writeString(modelInfoXml) })
+            } else {
+              null
+            }
+        }
+      )
+    }
+
+  private val libraryManager =
+    LibraryManager(
+        modelManager,
+        CqlCompilerOptions().apply {
+          setOptions(CqlCompilerOptions.Options.EnableResultTypes)
+        },
+      )
+      .apply {
+        librarySourceLoader.registerProvider(
+          object : LibrarySourceProvider {
+            override fun getLibrarySource(libraryIdentifier: VersionedIdentifier) =
+              if (libraryIdentifier.id == this@CqlExpressionEvaluator.libraryIdentifier.id) {
+                Buffer().apply { writeString(cqlLibrarySource) }
+              } else {
+                null
+              }
+
+            override fun getLibraryContent(
+              libraryIdentifier: VersionedIdentifier,
+              type: LibraryContentType,
+            ) =
+              if (type == LibraryContentType.CQL) getLibrarySource(libraryIdentifier) else null
+          }
+        )
+      }
+
+  private val fhirModel = modelManager.resolveModel("FHIR", "4.0.1")
+
+  private val terminologyProvider =
+    SimpleFhirTerminologyProvider(
+      parseBundleJson(
+        """{"resourceType":"Bundle","type":"collection","entry":[""" +
+          valueSetJsons.joinToString(",") { """{"resource":$it}""" } +
+          """]}"""
+      )
+    )
+
+  override suspend fun evaluate(
+    expression: ProtocolExpression,
+    context: EvaluationContext,
+  ): EvaluationResult {
+    if (expression !is ProtocolExpression.Elm) {
+      return EvaluationResult.Failure("CqlExpressionEvaluator cannot evaluate $expression")
+    }
+    val defineName = expression.elmJson.trim()
+
+    return try {
+      val subjectId =
+        context.subject.id
+          ?: return EvaluationResult.Failure("CQL evaluation requires a subject with an id")
+
+      val dataProvider: DataProvider =
+        CompositeDataProvider(
+          SimpleFhirModelResolver(fhirModel),
+          SimpleFhirRetrieveProvider(dataBundle(context), terminologyProvider),
+        )
+      val engine =
+        CqlEngine(
+          Environment(
+            libraryManager,
+            mutableMapOf<String?, DataProvider?>(fhirModelNamespaceUri to dataProvider),
+            terminologyProvider,
+          )
+        )
+
+      val results =
+        engine
+          .evaluate {
+            library(libraryIdentifier) { expressions(defineName) }
+            contextParameter = "Patient" to subjectId
+          }
+          .onlyResultOrThrow
+
+      toEvaluationResult(results[defineName]?.value)
+    } catch (t: Throwable) {
+      EvaluationResult.Failure(t.message ?: "CQL evaluation failed for define: $defineName")
+    }
+  }
+
+  /** The subject plus every Bundle-typed prefetch variable, merged into one collection bundle. */
+  private fun dataBundle(context: EvaluationContext): org.opencds.cqf.cql.engine.runtime.ClassInstance {
+    val resources = buildList {
+      add(context.subject)
+      context.variables.values.filterIsInstance<Bundle>().forEach { bundle ->
+        bundle.entry.forEach { entry -> entry.resource?.let { add(it) } }
+      }
+    }
+    val bundleJson =
+      """{"resourceType":"Bundle","type":"collection","entry":[""" +
+        resources.joinToString(",") {
+          """{"resource":${json.encodeToString(Resource.serializer(), it)}}"""
+        } +
+        """]}"""
+    return parseBundleJson(bundleJson)
+  }
+
+  private fun parseBundleJson(bundleJson: String) =
+    fhirResourceJsonToCqlValue(Buffer().apply { writeString(bundleJson) }, fhirModel)
+
+  /** Maps engine values onto the seam's [EvaluationResult]; the write-back accepts Kotlin primitives. */
+  private fun toEvaluationResult(value: Value?): EvaluationResult =
+    when (val unwrapped = unwrap(value)) {
+      null -> EvaluationResult.Values(emptyList())
+      is Boolean -> EvaluationResult.Bool(unwrapped)
+      is List<*> -> EvaluationResult.Values(unwrapped.filterNotNull().map { unwrap0(it) })
+      else -> EvaluationResult.Values(listOf(unwrapped))
+    }
+
+  private fun unwrap(value: Value?): Any? =
+    when (value) {
+      null -> null
+      is org.opencds.cqf.cql.engine.runtime.String -> value.value
+      is org.opencds.cqf.cql.engine.runtime.Boolean -> value.value
+      is org.opencds.cqf.cql.engine.runtime.Integer -> value.value
+      is org.opencds.cqf.cql.engine.runtime.List -> value.map { unwrap(it) }
+      else -> value.toString()
+    }
+
+  private fun unwrap0(item: Any): Any = item
+}

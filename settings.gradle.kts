@@ -19,3 +19,5 @@ dependencyResolutionManagement {
 rootProject.name = "smart-cxca-kmp"
 
 include(":cxca-demo")
+
+include(":cxca-cql")
