@@ -7,8 +7,10 @@ the Open Health Stack KMP stack, on four platforms, two ways:
 - **FHIRPath** (all platforms): the decision logic re-authored as `text/fhirpath`
   expressions in a PlanDefinition, evaluated by `ohs-foundation/kotlin-fhirpath`
   (FHIRPath evaluation).
-- **CQL** (Android, desktop, wasm): the WHO DAK's own CQL library, near-verbatim,
-  compiled and evaluated on device by the KMP CQL engine from
+- **CQL** (Android, desktop, wasm): the CQL library from `dhes/smart-cxca`
+  (a skeletal WHO-style cervical-cancer SMART IG; currently private),
+  authored in the WHO DAK idiom, near-verbatim, compiled and evaluated on
+  device by the KMP CQL engine from
   `cqframework/clinical_quality_language` (CQL spec + translator + evaluator),
   plugged into the `ExpressionEvaluator` seam of
   `ohs-foundation/kotlin-fhir-workflow` (PlanDefinition `$apply` + CPG ActivityFlow).
@@ -88,7 +90,7 @@ the engine gains native targets.
 ## Status and roadmap
 
 - ✅ **Phase 1** — S1 in FHIRPath, all platforms, truth-table verified
-- ✅ **Phase 2** — S1 in near-verbatim WHO CQL through the workflow seam
+- ✅ **Phase 2** — S1 in near-verbatim WHO-idiom CQL through the workflow seam
   (Android/desktop/wasm)
 - ⏭️ **CXCA.S3.DT** (act on screening result) — standalone library, next up
 - ⏭️ **CXCA.S2.DT** (screening due) — exercises multi-library `include`, the
