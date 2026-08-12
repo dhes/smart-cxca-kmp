@@ -27,7 +27,7 @@ CPG request/event lifecycles.
 
 ## The content this app executes
 
-- `dhes/smart-cxca` (WHO SMART cervical-cancer DAK IG) — the source of truth:
+- `dhes/smart-cxca` (a skeletal WHO-style cervical-cancer SMART IG) — the source of truth:
   decision tables authored in CQL (e.g. `CXCAEligibilityLogic`).
 - This repo re-authors the CXCA.S1.DT eligibility logic as **FHIRPath**
   (`cxca-demo/src/commonMain/composeResources/files/pd/CXCAS1DT.json`),
