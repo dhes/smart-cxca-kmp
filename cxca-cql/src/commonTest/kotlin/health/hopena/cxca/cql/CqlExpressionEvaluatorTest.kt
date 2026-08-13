@@ -24,7 +24,6 @@ import dev.ohs.fhir.workflow.expression.EvaluationResult
 import dev.ohs.fhir.workflow.expression.ExpressionEvaluatorRouter
 import dev.ohs.fhir.workflow.expression.ProtocolExpression
 import dev.ohs.fhir.workflow.operation.FhirOperator
-import dev.ohs.fhir.workflow.repository.WorkflowRepository
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -309,44 +308,4 @@ class CqlExpressionEvaluatorTest {
     println("=== \$apply output (CarePlan, CommunicationRequest contained) ===")
     println(prettyJson.encodeToString(Resource.serializer(), carePlan))
   }
-}
-
-/** Minimal in-memory [WorkflowRepository] — just what CanonicalResolver needs for these tests. */
-private class MapRepository : WorkflowRepository {
-  private val resources = mutableMapOf<String, Resource>()
-
-  private fun typeOf(resource: Resource) =
-    resource::class.simpleName ?: error("Unable to determine resource type")
-
-  override suspend fun read(type: String, id: String): Resource? = resources["$type/$id"]
-
-  override suspend fun create(resource: Resource): String {
-    val id = requireNotNull(resource.id)
-    resources["${typeOf(resource)}/$id"] = resource
-    return id
-  }
-
-  override suspend fun update(resource: Resource) {
-    create(resource)
-  }
-
-  override suspend fun delete(type: String, id: String) {
-    resources.remove("$type/$id")
-  }
-
-  override suspend fun searchByReferenceParam(
-    type: String,
-    param: String,
-    referenceValue: String,
-  ): List<Resource> = emptyList()
-
-  override suspend fun searchByUri(type: String, param: String, uri: String): List<Resource> =
-    resources.values.filter { r ->
-      typeOf(r) == type &&
-        when (r) {
-          is dev.ohs.fhir.model.r4.PlanDefinition -> r.url?.value == uri
-          is dev.ohs.fhir.model.r4.ActivityDefinition -> r.url?.value == uri
-          else -> false
-        }
-    }
 }

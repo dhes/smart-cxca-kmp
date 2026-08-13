@@ -162,6 +162,26 @@ class CqlExpressionEvaluator(
     }
     val defineName = expression.elmJson.trim()
 
+    // Expression.reference (the Library canonical) picks the entry library. Convention, as in
+    // the DAK content: the canonical's tail segment IS the CQL library name, an optional
+    // `|version` suffix its version. Absent a reference, the constructor's entry library holds.
+    val entryLibrary =
+      when (val reference = expression.reference) {
+        null -> libraryIdentifier
+        else -> {
+          val name = reference.substringAfterLast('/').substringBefore('|')
+          if (name !in librarySourcesByName) {
+            return EvaluationResult.Failure(
+              "Expression.reference $reference names no library this evaluator holds " +
+                "(known: ${librarySourcesByName.keys})"
+            )
+          }
+          VersionedIdentifier()
+            .withId(name)
+            .withVersion(reference.substringAfterLast('|', "").ifEmpty { null })
+        }
+      }
+
     return try {
       val subjectId =
         context.subject.id
@@ -184,7 +204,7 @@ class CqlExpressionEvaluator(
       val results =
         engine
           .evaluate {
-            library(libraryIdentifier) { expressions(defineName) }
+            library(entryLibrary) { expressions(defineName) }
             contextParameter = "Patient" to subjectId
             // The seam's `today` is the evaluation clock: without this, Today()/AgeInYears()
             // read the machine clock and date logic is untestable.
