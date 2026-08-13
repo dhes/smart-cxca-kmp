@@ -1,0 +1,8 @@
+{
+    "resourceType": "Patient",
+    "id": "cxca-cql-due-45",
+    "active": true,
+    "name": [{"family": "Mensah", "given": ["Efua"]}],
+    "gender": "female",
+    "birthDate": "1981-02-02"
+}

@@ -35,13 +35,14 @@ data class DemoConfiguration(
 )
 
 /**
- * The assets a CQL-evaluated scenario needs: the library the PlanDefinition's text/cql define
- * names resolve against, the ValueSets its `valueset` declarations expand from, and the FHIR
- * modelinfo the compiler and data providers share.
+ * The assets a CQL-evaluated scenario needs: the entry library the PlanDefinition's text/cql
+ * define names resolve against, the libraries it `include`s, the ValueSets their `valueset`
+ * declarations expand from, and the FHIR modelinfo the compiler and data providers share.
  */
 data class CqlScenario(
   val cqlLibraryPath: String,
   val valueSetPaths: List<String>,
+  val includedLibraryPaths: List<String> = emptyList(),
   val modelInfoPath: String = "files/modelinfo/fhir-modelinfo-4.0.1.xml",
 )
 
@@ -148,7 +149,84 @@ val HYSTERECTOMY_45_CQL =
     cql = CXCA_S1_CQL_SCENARIO,
   )
 
+// ---- CXCA.S2.DT (due for screening) — the first multi-library CQL table ----
+
+private val CXCA_S2_CQL_SCENARIO =
+  CqlScenario(
+    cqlLibraryPath = "files/cql/CXCADueForScreeningLogic.cql",
+    includedLibraryPaths = listOf("files/cql/CXCAEligibilityLogic.cql"),
+    valueSetPaths =
+      listOf(
+        "files/vs/hiv-positive-status.json",
+        "files/vs/absence-of-cervix.json",
+        "files/vs/total-hysterectomy.json",
+        "files/vs/cervical-cancer-screening-test.json",
+      ),
+  )
+
+private const val CXCA_S2_CQL_PD = "files/pd/CXCAS2DTCql.json"
+private const val CXCA_S2_CQL_PD_CANONICAL =
+  "http://hopena.health/cxca-kmp/PlanDefinition/CXCAS2DTCql"
+private const val CXCA_S2_AD = "files/ad/CommunicateDueForScreening.json"
+
+/** General, 45, last screened 2019: the 5-year interval elapsed long ago — Due. */
+val DUE_45_CQL =
+  DemoConfiguration(
+    id = "id_cxca_cql_due_45",
+    description = "General, 45, screened 2019 — Due (CQL, S2)",
+    patientId = "cxca-cql-due-45",
+    patientName = "Efua Mensah (45, screened 2019) — CQL S2",
+    patientPath = "files/patient/PatientDueCql.json",
+    planDefinitionPath = CXCA_S2_CQL_PD,
+    planDefinitionCanonical = CXCA_S2_CQL_PD_CANONICAL,
+    activityDefinitionPath = CXCA_S2_AD,
+    additionalResourcePaths = listOf("files/patient/ObservationScreenDueCql.json"),
+    cql = CXCA_S2_CQL_SCENARIO,
+  )
+
+/** General, 45, last screened 2025: within the 5-year interval — Not due (until 2030). */
+val NOT_DUE_45_CQL =
+  DemoConfiguration(
+    id = "id_cxca_cql_notdue_45",
+    description = "General, 45, screened 2025 — Not due (CQL, S2)",
+    patientId = "cxca-cql-notdue-45",
+    patientName = "Folasade Adeyemi (45, screened 2025) — CQL S2",
+    patientPath = "files/patient/PatientNotDueCql.json",
+    planDefinitionPath = CXCA_S2_CQL_PD,
+    planDefinitionCanonical = CXCA_S2_CQL_PD_CANONICAL,
+    activityDefinitionPath = CXCA_S2_AD,
+    additionalResourcePaths = listOf("files/patient/ObservationScreenNotDueCql.json"),
+    cql = CXCA_S2_CQL_SCENARIO,
+  )
+
+/**
+ * WLHIV, 45, last screened 2023-05: the differentiated interval in one patient — Due on the
+ * 3-year WLHIV interval where the general population would not be. (The contrast holds until
+ * 2028-05, when 5 years elapse and the general population comes due too.)
+ */
+val WLHIV_DUE_45_CQL =
+  DemoConfiguration(
+    id = "id_cxca_cql_wlhiv_due_45",
+    description = "WLHIV, 45, screened 2023 — Due on the 3y interval (CQL, S2)",
+    patientId = "cxca-cql-wlhiv-due-45",
+    patientName = "Grace Banda (45, WLHIV, screened 2023) — CQL S2",
+    patientPath = "files/patient/PatientWlhivDueCql.json",
+    planDefinitionPath = CXCA_S2_CQL_PD,
+    planDefinitionCanonical = CXCA_S2_CQL_PD_CANONICAL,
+    activityDefinitionPath = CXCA_S2_AD,
+    additionalResourcePaths =
+      listOf(
+        "files/patient/ObservationHivWlhivDueCql.json",
+        "files/patient/ObservationScreenWlhivDueCql.json",
+      ),
+    cql = CXCA_S2_CQL_SCENARIO,
+  )
+
 /** CQL scenarios appear only where the platform has the engine (see [cqlSupported]). */
 val DEMO_CONFIGURATIONS: List<DemoConfiguration> =
   listOf(WLHIV_27, GENERAL_27, GENERAL_45, HYSTERECTOMY_45) +
-    (if (cqlSupported) listOf(WLHIV_27_CQL, HYSTERECTOMY_45_CQL) else emptyList())
+    (if (cqlSupported) {
+      listOf(WLHIV_27_CQL, HYSTERECTOMY_45_CQL, DUE_45_CQL, NOT_DUE_45_CQL, WLHIV_DUE_45_CQL)
+    } else {
+      emptyList()
+    })

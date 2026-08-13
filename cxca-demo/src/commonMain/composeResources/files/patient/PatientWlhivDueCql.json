@@ -1,0 +1,8 @@
+{
+    "resourceType": "Patient",
+    "id": "cxca-cql-wlhiv-due-45",
+    "active": true,
+    "name": [{"family": "Banda", "given": ["Grace"]}],
+    "gender": "female",
+    "birthDate": "1981-02-02"
+}

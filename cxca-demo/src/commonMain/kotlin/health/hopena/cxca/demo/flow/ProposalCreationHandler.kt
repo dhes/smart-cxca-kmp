@@ -61,6 +61,7 @@ class ProposalCreationHandler(
             cqlLibrarySource = assets(scenario.cqlLibraryPath),
             valueSetJsons = scenario.valueSetPaths.map { assets(it) },
             modelInfoXml = assets(scenario.modelInfoPath),
+            includedLibrarySources = scenario.includedLibraryPaths.map { assets(it) },
           )
         }
       if (cqlEvaluator != null) {

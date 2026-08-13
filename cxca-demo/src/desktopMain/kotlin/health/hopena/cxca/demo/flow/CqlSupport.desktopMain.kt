@@ -24,4 +24,6 @@ actual fun createCqlEvaluator(
   cqlLibrarySource: String,
   valueSetJsons: List<String>,
   modelInfoXml: String,
-): ExpressionEvaluator? = CqlExpressionEvaluator(cqlLibrarySource, valueSetJsons, modelInfoXml)
+  includedLibrarySources: List<String>,
+): ExpressionEvaluator? =
+  CqlExpressionEvaluator(cqlLibrarySource, valueSetJsons, modelInfoXml, includedLibrarySources)

@@ -1,0 +1,8 @@
+{
+    "resourceType": "Patient",
+    "id": "cxca-cql-notdue-45",
+    "active": true,
+    "name": [{"family": "Adeyemi", "given": ["Folasade"]}],
+    "gender": "female",
+    "birthDate": "1981-02-02"
+}

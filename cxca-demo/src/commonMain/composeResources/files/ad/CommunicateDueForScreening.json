@@ -1,0 +1,14 @@
+{
+    "resourceType": "ActivityDefinition",
+    "id": "CommunicateDueForScreening",
+    "url": "http://hopena.health/cxca-kmp/ActivityDefinition/CommunicateDueForScreening",
+    "name": "CommunicateDueForScreening",
+    "title": "Communicate whether cervical cancer screening is due",
+    "status": "active",
+    "experimental": true,
+    "description": "Communicate the CXCA.S2.DT due-for-screening determination and its guidance to the health worker.",
+    "kind": "CommunicationRequest",
+    "profile": "http://hl7.org/fhir/uv/cpg/StructureDefinition/cpg-communicationrequest",
+    "intent": "proposal",
+    "priority": "routine"
+}

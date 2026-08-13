@@ -1,0 +1,36 @@
+{
+    "resourceType": "PlanDefinition",
+    "id": "CXCAS2DTCql",
+    "url": "http://hopena.health/cxca-kmp/PlanDefinition/CXCAS2DTCql",
+    "name": "CXCAS2DTCql",
+    "title": "CXCA.S2.DT Determine whether cervical cancer screening is due (CQL)",
+    "status": "active",
+    "experimental": true,
+    "description": "The S2 decision table evaluated as REAL CQL: CXCADueForScreeningLogic (near-verbatim from the DAK) includes the S1 eligibility library, and each dynamicValue expression carries Expression.reference — the Library canonical — so the evaluator addresses the right library. The first multi-library table on the KMP stack.",
+    "action": [
+        {
+            "id": "s2-communicate-due-cql",
+            "title": "Communicate the due-for-screening determination to the health worker",
+            "textEquivalent": "Determine whether cervical cancer screening is due (CQL) and communicate the determination",
+            "definitionCanonical": "http://hopena.health/cxca-kmp/ActivityDefinition/CommunicateDueForScreening",
+            "dynamicValue": [
+                {
+                    "path": "reasonCode[0].text",
+                    "expression": {
+                        "language": "text/cql",
+                        "expression": "Screening recommendation status",
+                        "reference": "http://smart.who.int/cxca/Library/CXCADueForScreeningLogic"
+                    }
+                },
+                {
+                    "path": "payload[0].contentString",
+                    "expression": {
+                        "language": "text/cql",
+                        "expression": "Guidance",
+                        "reference": "http://smart.who.int/cxca/Library/CXCADueForScreeningLogic"
+                    }
+                }
+            ]
+        }
+    ]
+}

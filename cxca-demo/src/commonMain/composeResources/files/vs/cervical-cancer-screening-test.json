@@ -1,0 +1,3 @@
+{"resourceType":"ValueSet","id":"cervical-cancer-screening-test","status":"active",
+ "url":"http://smart.who.int/cxca/ValueSet/cervical-cancer-screening-test",
+ "compose":{"include":[{"system":"http://snomed.info/sct","concept":[{"code":"171149006","display":"Screening for malignant neoplasm of cervix"}]}]}}

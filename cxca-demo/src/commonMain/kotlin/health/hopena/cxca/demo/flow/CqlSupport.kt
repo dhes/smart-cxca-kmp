@@ -26,11 +26,13 @@ expect val cqlSupported: Boolean
 
 /**
  * Creates the CQL [ExpressionEvaluator] (cxca-cql's CqlExpressionEvaluator) on platforms that
- * have it, or null on platforms that do not. Inputs are the app-bundled assets: the CQL library
- * source, the ValueSet JSONs its valuesets resolve against, and the FHIR modelinfo XML.
+ * have it, or null on platforms that do not. Inputs are the app-bundled assets: the entry CQL
+ * library source, the sources of libraries it `include`s, the ValueSet JSONs their valuesets
+ * resolve against, and the FHIR modelinfo XML.
  */
 expect fun createCqlEvaluator(
   cqlLibrarySource: String,
   valueSetJsons: List<String>,
   modelInfoXml: String,
+  includedLibrarySources: List<String> = emptyList(),
 ): ExpressionEvaluator?

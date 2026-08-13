@@ -1,0 +1,10 @@
+{
+    "resourceType": "Observation",
+    "id": "cxca-cql-notdue-45-screen",
+    "status": "final",
+    "code": {
+        "coding": [{"system": "http://snomed.info/sct", "code": "171149006", "display": "Screening for malignant neoplasm of cervix"}]
+    },
+    "effectiveDateTime": "2025-10-01",
+    "subject": {"reference": "Patient/cxca-cql-notdue-45"}
+}

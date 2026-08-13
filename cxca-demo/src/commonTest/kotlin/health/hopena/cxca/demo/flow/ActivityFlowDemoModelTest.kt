@@ -181,6 +181,27 @@ class ActivityFlowDemoModelTest {
   }
 
   @Test
+  fun shouldDetermineDueForScreeningViaTheS2MultiLibraryCql() = runTest {
+    // CXCA.S2.DT: CXCADueForScreeningLogic includes the S1 library, and every dynamicValue
+    // carries Expression.reference so the evaluator addresses the entry library. Scenario
+    // dates are chosen to stay stable against the real clock (see DemoConfiguration).
+    if (!cqlSupported) return@runTest
+
+    val (dueStatus, dueGuidance) = determination(DUE_45_CQL)
+    assertEquals("Due", dueStatus)
+    assertTrue(dueGuidance.contains("HPV-DNA testing as the primary screening test"))
+
+    val (notDueStatus, notDueGuidance) = determination(NOT_DUE_45_CQL)
+    assertEquals("Not due", notDueStatus)
+    assertTrue(notDueGuidance.contains("screened within the recommended interval"))
+
+    // The differentiated interval: the same 2023 screen date is Due only because of HIV status.
+    val (wlhivStatus, wlhivGuidance) = determination(WLHIV_DUE_45_CQL)
+    assertEquals("Due", wlhivStatus)
+    assertTrue(wlhivGuidance.contains("re-screen every 3 years"))
+  }
+
+  @Test
   fun shouldDetermineNotEligibleWhenGeneralPopulationAge27() = runTest {
     // General population start age is 30; 27 is below it.
     val (status, guidance) = determination(GENERAL_27)

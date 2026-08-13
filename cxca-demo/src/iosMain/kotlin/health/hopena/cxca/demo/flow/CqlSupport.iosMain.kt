@@ -24,4 +24,5 @@ actual fun createCqlEvaluator(
   cqlLibrarySource: String,
   valueSetJsons: List<String>,
   modelInfoXml: String,
+  includedLibrarySources: List<String>,
 ): ExpressionEvaluator? = null

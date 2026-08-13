@@ -1,0 +1,9 @@
+{
+    "resourceType": "Observation",
+    "id": "cxca-cql-wlhiv-due-45-hiv-status",
+    "status": "final",
+    "code": {
+        "coding": [{"system": "http://snomed.info/sct", "code": "165816005", "display": "Human immunodeficiency virus positive"}]
+    },
+    "subject": {"reference": "Patient/cxca-cql-wlhiv-due-45"}
+}
