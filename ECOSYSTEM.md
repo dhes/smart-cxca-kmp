@@ -22,8 +22,12 @@ stores them (SQLite on Android/desktop/iOS; a wasm target landed in
 CPG request/event lifecycles.
 
 \* `workflow` is not yet on Maven Central: it is built from the
-`workflow-kmp-migration` branch and published to mavenLocal
-(`./gradlew :workflow:publishToMavenLocal` in that repo).
+[`expression-reference` branch of `dhes/kotlin-fhir-workflow`](https://github.com/dhes/kotlin-fhir-workflow/tree/expression-reference)
+and published to mavenLocal (`./gradlew :workflow:publishToMavenLocal` in that
+repo). That branch is upstream's `workflow-kmp-migration` plus one seam patch —
+`ProtocolExpression.Elm` carries `Expression.reference` so a multi-library
+evaluator can address the entry library (needed by the S2 decision table;
+upstream PR pending).
 
 ## The content this app executes
 
