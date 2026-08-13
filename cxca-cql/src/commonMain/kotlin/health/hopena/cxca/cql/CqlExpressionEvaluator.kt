@@ -21,6 +21,7 @@ import dev.ohs.fhir.workflow.expression.EvaluationContext
 import dev.ohs.fhir.workflow.expression.EvaluationResult
 import dev.ohs.fhir.workflow.expression.ExpressionEvaluator
 import dev.ohs.fhir.workflow.expression.ProtocolExpression
+import kotlinx.datetime.number
 import kotlinx.io.Buffer
 import kotlinx.io.writeString
 import kotlinx.serialization.json.Json
@@ -44,6 +45,8 @@ import org.opencds.cqf.cql.engine.fhir.parser.fhirResourceJsonToCqlValue
 import org.opencds.cqf.cql.engine.fhir.retrieve.SimpleFhirRetrieveProvider
 import org.opencds.cqf.cql.engine.fhir.terminology.SimpleFhirTerminologyProvider
 import org.opencds.cqf.cql.engine.runtime.Value
+import org.opencds.cqf.cql.engine.util.localDateOf
+import org.opencds.cqf.cql.engine.util.zoneIdOf
 
 /**
  * A CQL implementation of the workflow library's [ExpressionEvaluator] seam, backed by the
@@ -163,6 +166,11 @@ class CqlExpressionEvaluator(
           .evaluate {
             library(libraryIdentifier) { expressions(defineName) }
             contextParameter = "Patient" to subjectId
+            // The seam's `today` is the evaluation clock: without this, Today()/AgeInYears()
+            // read the machine clock and date logic is untestable.
+            evaluationDateTime =
+              localDateOf(context.today.year, context.today.month.number, context.today.day)
+                .atStartOfDay(zoneIdOf("UTC"))
           }
           .onlyResultOrThrow
 
