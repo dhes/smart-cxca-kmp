@@ -92,9 +92,11 @@ the engine gains native targets.
 - ✅ **Phase 1** — S1 in FHIRPath, all platforms, truth-table verified
 - ✅ **Phase 2** — S1 in near-verbatim WHO-idiom CQL through the workflow seam
   (Android/desktop/wasm)
+- ✅ **CXCA.S2.DT** (screening due) — multi-library `include` resolved by the
+  evaluator; entry library addressed per expression via `Expression.reference`
+  carried through a patched workflow seam (branch `expression-reference`,
+  upstream PR candidate)
 - ⏭️ **CXCA.S3.DT** (act on screening result) — standalone library, next up
-- ⏭️ **CXCA.S2.DT** (screening due) — exercises multi-library `include`, the
-  next seam question for upstream
 - ⏭️ Knowledge-manager integration once `ohs-foundation/kotlin-fhir-knowledge`
   (KMP Knowledge Manager) ships — canonical resolution replaces bundled-asset
   lookup
