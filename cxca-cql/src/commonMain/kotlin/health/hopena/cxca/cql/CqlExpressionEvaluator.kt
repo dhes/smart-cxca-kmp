@@ -57,11 +57,16 @@ import org.opencds.cqf.cql.engine.util.zoneIdOf
  * text to the ELM seam verbatim; `text/cql-identifier` is not yet mapped upstream). The library
  * is compiled once and cached; per evaluation, the subject and every Bundle-typed prefetch
  * variable in the [EvaluationContext] are merged into one data bundle the engine retrieves from.
+ *
+ * Libraries the entry library `include`s are passed as [includedLibrarySources] and resolved by
+ * name at compile time. Their defines are not directly evaluable through the seam — only entry
+ * -library define names are; the entry library reaches included logic via its alias.
  */
 class CqlExpressionEvaluator(
   private val cqlLibrarySource: String,
   valueSetJsons: List<String>,
   modelInfoXml: String,
+  includedLibrarySources: List<String> = emptyList(),
 ) : ExpressionEvaluator {
 
   private val json = Json {
@@ -70,11 +75,28 @@ class CqlExpressionEvaluator(
     explicitNulls = false
   }
 
-  private val libraryIdentifier: VersionedIdentifier = run {
+  private val libraryIdentifier: VersionedIdentifier =
+    parseLibraryDeclaration(cqlLibrarySource)
+
+  /**
+   * Every source the compiler may ask for, keyed by library name: the entry library plus the
+   * libraries it (transitively) `include`s. Define names in [evaluate] still resolve against the
+   * entry library only; an included library's defines are reachable through its local alias
+   * (`Eligibility."Eligible"`), exactly as in CQL source. A version declared in an `include` is
+   * checked by the compiler against the source's own declaration, not by this lookup.
+   */
+  private val librarySourcesByName: Map<String, String> = buildMap {
+    (listOf(cqlLibrarySource) + includedLibrarySources).forEach { source ->
+      val name = parseLibraryDeclaration(source).id!!
+      check(put(name, source) == null) { "Two library sources declare the name $name" }
+    }
+  }
+
+  private fun parseLibraryDeclaration(source: String): VersionedIdentifier {
     val match =
-      Regex("""library\s+(\w+)(?:\s+version\s+'([^']+)')?""").find(cqlLibrarySource)
-        ?: error("cqlLibrarySource has no library declaration")
-    VersionedIdentifier().withId(match.groupValues[1]).withVersion(
+      Regex("""library\s+(\w+)(?:\s+version\s+'([^']+)')?""").find(source)
+        ?: error("CQL source has no library declaration")
+    return VersionedIdentifier().withId(match.groupValues[1]).withVersion(
       match.groupValues[2].ifEmpty { null }
     )
   }
@@ -107,10 +129,8 @@ class CqlExpressionEvaluator(
         librarySourceLoader.registerProvider(
           object : LibrarySourceProvider {
             override fun getLibrarySource(libraryIdentifier: VersionedIdentifier) =
-              if (libraryIdentifier.id == this@CqlExpressionEvaluator.libraryIdentifier.id) {
-                Buffer().apply { writeString(cqlLibrarySource) }
-              } else {
-                null
+              librarySourcesByName[libraryIdentifier.id]?.let { source ->
+                Buffer().apply { writeString(source) }
               }
 
             override fun getLibraryContent(
