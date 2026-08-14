@@ -9,10 +9,11 @@ platforms, two ways:
 - **FHIRPath** (all platforms; S1): the eligibility logic re-authored as
   `text/fhirpath` expressions in a PlanDefinition, evaluated by
   `ohs-foundation/kotlin-fhirpath` (FHIRPath evaluation).
-- **CQL** (Android, desktop, wasm): the CQL library from
+- **CQL** (Android, desktop, wasm): the CQL libraries from
   [`dhes/smart-cxca`](https://github.com/dhes/smart-cxca) (a skeletal
-  WHO-style cervical-cancer SMART IG), authored in the WHO DAK idiom,
-  near-verbatim, compiled and evaluated on device by the KMP CQL engine from
+  WHO-style cervical-cancer SMART IG), **verbatim — byte-for-byte DAK
+  source, FHIRHelpers 4.0.1 included** — compiled and evaluated on device
+  by the KMP CQL engine from
   `cqframework/clinical_quality_language` (CQL spec + translator + evaluator),
   plugged into the `ExpressionEvaluator` seam of
   `ohs-foundation/kotlin-fhir-workflow` (PlanDefinition `$apply` + CPG ActivityFlow).
@@ -96,8 +97,9 @@ the engine gains native targets.
 ## Status and roadmap
 
 - ✅ **Phase 1** — S1 in FHIRPath, all platforms, truth-table verified
-- ✅ **Phase 2** — S1 in near-verbatim WHO-idiom CQL through the workflow seam
-  (Android/desktop/wasm)
+- ✅ **Phase 2** — S1 in WHO-idiom CQL through the workflow seam
+  (Android/desktop/wasm); since upgraded to verbatim DAK source with real
+  FHIRHelpers (no `.value` rewrites, no deviations)
 - ✅ **CXCA.S2.DT** (screening due) — multi-library `include` resolved by the
   evaluator; entry library addressed per expression via `Expression.reference`
   carried through a patched workflow seam (branch `expression-reference`,

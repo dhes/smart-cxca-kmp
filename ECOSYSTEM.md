@@ -34,7 +34,8 @@ upstream PR pending).
 - `dhes/smart-cxca` (a skeletal WHO-style cervical-cancer SMART IG, now public) — the
   source of truth: the three decision tables authored in CQL
   (`CXCAEligibilityLogic`, `CXCADueForScreeningLogic`, `CXCAScreeningResultLogic`).
-- All three tables run here as **near-verbatim CQL** through `cxca-cql`, the
+- All three tables run here as **verbatim CQL** (byte-for-byte DAK source,
+  FHIRHelpers 4.0.1 included) through `cxca-cql`, the
   `ExpressionEvaluator` implementation over the cqframework v5 KMP engine. S2
   `include`s S1 (multi-library resolution), and every CQL dynamicValue carries
   `Expression.reference` so the evaluator addresses the right library.
