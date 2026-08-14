@@ -1,0 +1,3 @@
+{"resourceType":"ValueSet","id":"hpv-negative-result","status":"active",
+ "url":"http://smart.who.int/cxca/ValueSet/hpv-negative-result",
+ "compose":{"include":[{"system":"http://snomed.info/sct","concept":[{"code":"1269499009","display":"High risk human papillomavirus deoxyribonucleic acid not detected (finding)"}]}]}}

@@ -1,0 +1,18 @@
+{
+    "resourceType": "Observation",
+    "id": "cxca-cql-hpv-inv-45-hpv-result",
+    "status": "final",
+    "code": {
+        "coding": [
+            {
+                "system": "http://snomed.info/sct",
+                "code": "455371000124106",
+                "display": "Invalid result (qualifier value)"
+            }
+        ]
+    },
+    "effectiveDateTime": "2026-07-20",
+    "subject": {
+        "reference": "Patient/cxca-cql-hpv-inv-45"
+    }
+}

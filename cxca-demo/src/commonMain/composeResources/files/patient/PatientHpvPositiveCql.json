@@ -1,0 +1,15 @@
+{
+    "resourceType": "Patient",
+    "id": "cxca-cql-hpv-pos-45",
+    "active": true,
+    "name": [
+        {
+            "family": "Diallo",
+            "given": [
+                "Halima"
+            ]
+        }
+    ],
+    "gender": "female",
+    "birthDate": "1981-02-02"
+}

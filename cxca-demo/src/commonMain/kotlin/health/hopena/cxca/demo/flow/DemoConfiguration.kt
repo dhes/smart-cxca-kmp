@@ -222,11 +222,83 @@ val WLHIV_DUE_45_CQL =
     cql = CXCA_S2_CQL_SCENARIO,
   )
 
+// ---- CXCA.S3.DT (act on a screening result) — standalone result interpretation ----
+
+private val CXCA_S3_CQL_SCENARIO =
+  CqlScenario(
+    cqlLibraryPath = "files/cql/CXCAScreeningResultLogic.cql",
+    valueSetPaths =
+      listOf(
+        "files/vs/hpv-positive-result.json",
+        "files/vs/hpv-negative-result.json",
+        "files/vs/hpv-invalid-result.json",
+      ),
+  )
+
+private const val CXCA_S3_CQL_PD = "files/pd/CXCAS3DTCql.json"
+private const val CXCA_S3_CQL_PD_CANONICAL =
+  "http://hopena.health/cxca-kmp/PlanDefinition/CXCAS3DTCql"
+private const val CXCA_S3_AD = "files/ad/CommunicateScreeningResult.json"
+
+/** HPV-DNA positive: high-risk HPV detected — refer for triage/treatment. */
+val HPV_POSITIVE_45_CQL =
+  DemoConfiguration(
+    id = "id_cxca_cql_hpv_pos_45",
+    description = "HPV positive — Refer for triage/treatment (CQL, S3)",
+    patientId = "cxca-cql-hpv-pos-45",
+    patientName = "Halima Diallo (45, HPV positive) — CQL S3",
+    patientPath = "files/patient/PatientHpvPositiveCql.json",
+    planDefinitionPath = CXCA_S3_CQL_PD,
+    planDefinitionCanonical = CXCA_S3_CQL_PD_CANONICAL,
+    activityDefinitionPath = CXCA_S3_AD,
+    additionalResourcePaths = listOf("files/patient/ObservationHpvPositiveCql.json"),
+    cql = CXCA_S3_CQL_SCENARIO,
+  )
+
+/** HPV-DNA negative: no high-risk HPV — re-screen at the recommended interval. */
+val HPV_NEGATIVE_45_CQL =
+  DemoConfiguration(
+    id = "id_cxca_cql_hpv_neg_45",
+    description = "HPV negative — Rescreen at interval (CQL, S3)",
+    patientId = "cxca-cql-hpv-neg-45",
+    patientName = "Imani Njoroge (45, HPV negative) — CQL S3",
+    patientPath = "files/patient/PatientHpvNegativeCql.json",
+    planDefinitionPath = CXCA_S3_CQL_PD,
+    planDefinitionCanonical = CXCA_S3_CQL_PD_CANONICAL,
+    activityDefinitionPath = CXCA_S3_AD,
+    additionalResourcePaths = listOf("files/patient/ObservationHpvNegativeCql.json"),
+    cql = CXCA_S3_CQL_SCENARIO,
+  )
+
+/** HPV-DNA result invalid/inadequate — repeat the test. */
+val HPV_INVALID_45_CQL =
+  DemoConfiguration(
+    id = "id_cxca_cql_hpv_inv_45",
+    description = "HPV invalid — Repeat test (CQL, S3)",
+    patientId = "cxca-cql-hpv-inv-45",
+    patientName = "Jendayi Moyo (45, HPV result invalid) — CQL S3",
+    patientPath = "files/patient/PatientHpvInvalidCql.json",
+    planDefinitionPath = CXCA_S3_CQL_PD,
+    planDefinitionCanonical = CXCA_S3_CQL_PD_CANONICAL,
+    activityDefinitionPath = CXCA_S3_AD,
+    additionalResourcePaths = listOf("files/patient/ObservationHpvInvalidCql.json"),
+    cql = CXCA_S3_CQL_SCENARIO,
+  )
+
 /** CQL scenarios appear only where the platform has the engine (see [cqlSupported]). */
 val DEMO_CONFIGURATIONS: List<DemoConfiguration> =
   listOf(WLHIV_27, GENERAL_27, GENERAL_45, HYSTERECTOMY_45) +
     (if (cqlSupported) {
-      listOf(WLHIV_27_CQL, HYSTERECTOMY_45_CQL, DUE_45_CQL, NOT_DUE_45_CQL, WLHIV_DUE_45_CQL)
+      listOf(
+        WLHIV_27_CQL,
+        HYSTERECTOMY_45_CQL,
+        DUE_45_CQL,
+        NOT_DUE_45_CQL,
+        WLHIV_DUE_45_CQL,
+        HPV_POSITIVE_45_CQL,
+        HPV_NEGATIVE_45_CQL,
+        HPV_INVALID_45_CQL,
+      )
     } else {
       emptyList()
     })

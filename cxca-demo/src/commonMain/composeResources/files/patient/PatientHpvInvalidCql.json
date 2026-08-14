@@ -1,0 +1,15 @@
+{
+    "resourceType": "Patient",
+    "id": "cxca-cql-hpv-inv-45",
+    "active": true,
+    "name": [
+        {
+            "family": "Moyo",
+            "given": [
+                "Jendayi"
+            ]
+        }
+    ],
+    "gender": "female",
+    "birthDate": "1981-02-02"
+}

@@ -1,0 +1,15 @@
+{
+    "resourceType": "Patient",
+    "id": "cxca-cql-hpv-neg-45",
+    "active": true,
+    "name": [
+        {
+            "family": "Njoroge",
+            "given": [
+                "Imani"
+            ]
+        }
+    ],
+    "gender": "female",
+    "birthDate": "1981-02-02"
+}

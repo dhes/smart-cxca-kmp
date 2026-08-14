@@ -1,12 +1,14 @@
 # smart-cxca-kmp
 
-A Kotlin Multiplatform demo that runs a WHO SMART Guidelines cervical-cancer
-screening decision table — CXCA.S1.DT, *determine screening eligibility* — on
-the Open Health Stack KMP stack, on four platforms, two ways:
+A Kotlin Multiplatform demo that runs the WHO SMART-style cervical-cancer
+screening decision tables — CXCA.S1 (*screening eligibility*), S2 (*due for
+screening*), and S3 (*act on the screening result*), the full
+screen-triage-treat arc — on the Open Health Stack KMP stack, on four
+platforms, two ways:
 
-- **FHIRPath** (all platforms): the decision logic re-authored as `text/fhirpath`
-  expressions in a PlanDefinition, evaluated by `ohs-foundation/kotlin-fhirpath`
-  (FHIRPath evaluation).
+- **FHIRPath** (all platforms; S1): the eligibility logic re-authored as
+  `text/fhirpath` expressions in a PlanDefinition, evaluated by
+  `ohs-foundation/kotlin-fhirpath` (FHIRPath evaluation).
 - **CQL** (Android, desktop, wasm): the CQL library from
   [`dhes/smart-cxca`](https://github.com/dhes/smart-cxca) (a skeletal
   WHO-style cervical-cancer SMART IG), authored in the WHO DAK idiom,
@@ -21,11 +23,15 @@ to generate concrete feedback on both while their APIs are still pre-alpha.
 
 ## What it does
 
-`PlanDefinition/$apply` runs the S1 eligibility gate over bundled test patients
-(age bands, HIV status, prior hysterectomy) and writes the outcome — an
-eligibility status plus WHO guidance text — into a CommunicationRequest. Ten
-scenarios ship: five evaluated via FHIRPath, the same five via CQL, with
-matching truth tables enforced by tests.
+`PlanDefinition/$apply` runs the decision tables over bundled test patients
+and writes each outcome — a status plus WHO guidance text — into a
+CommunicationRequest. Twelve scenarios ship: four via FHIRPath (S1), eight via
+CQL across the three tables — eligibility (age bands, HIV status, prior
+hysterectomy), due-for-screening (the differentiated 3-year WLHIV vs 5-year
+general interval), and result action (positive/negative/invalid HPV-DNA) —
+with truth tables enforced by tests. S2 `include`s the S1 library; every CQL
+dynamicValue carries `Expression.reference` so one evaluator can hold several
+libraries and address the right one per expression.
 
 ## The tunnel (a deliberate, temporary hack)
 
@@ -96,7 +102,8 @@ the engine gains native targets.
   evaluator; entry library addressed per expression via `Expression.reference`
   carried through a patched workflow seam (branch `expression-reference`,
   upstream PR candidate)
-- ⏭️ **CXCA.S3.DT** (act on screening result) — standalone library, next up
+- ✅ **CXCA.S3.DT** (act on screening result) — standalone result
+  interpretation; all three DAK tables now run as CQL
 - ⏭️ Knowledge-manager integration once `ohs-foundation/kotlin-fhir-knowledge`
   (KMP Knowledge Manager) ships — canonical resolution replaces bundled-asset
   lookup

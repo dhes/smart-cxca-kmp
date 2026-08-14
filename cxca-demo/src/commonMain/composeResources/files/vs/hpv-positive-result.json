@@ -1,0 +1,3 @@
+{"resourceType":"ValueSet","id":"hpv-positive-result","status":"active",
+ "url":"http://smart.who.int/cxca/ValueSet/hpv-positive-result",
+ "compose":{"include":[{"system":"http://snomed.info/sct","concept":[{"code":"1269497006","display":"High risk human papillomavirus deoxyribonucleic acid detected (finding)"}]}]}}

@@ -128,12 +128,32 @@ private val S2_VALUE_SETS =
        "compose":{"include":[{"system":"http://snomed.info/sct","concept":[{"code":"417036008"}]}]}}""",
   )
 
+/**
+ * A minimal S3 stand-in for the tri-library test: nothing includes it — it is reachable ONLY by
+ * Expression.reference, which is the point.
+ */
+private val S3_SOURCE =
+  """
+  library CXCAScreeningResultLogic version '0.1.0'
+  using FHIR version '4.0.1'
+  valueset "HPV-positive result": 'http://smart.who.int/cxca/ValueSet/hpv-positive-result'
+  context Patient
+  define "HPV Positive":
+    exists ([Observation: "HPV-positive result"] O where O.status.value in { 'final', 'amended' })
+  define "Screening result recommendation status":
+    if "HPV Positive" then 'Refer for triage/treatment' else 'Not applicable'
+  """
+    .trimIndent()
+
 private val s2Evaluator by lazy {
   CqlExpressionEvaluator(
     S2_SOURCE,
-    S2_VALUE_SETS,
+    S2_VALUE_SETS +
+      """{"resourceType":"ValueSet","id":"hpv-positive-result","status":"active",
+         "url":"http://smart.who.int/cxca/ValueSet/hpv-positive-result",
+         "compose":{"include":[{"system":"http://snomed.info/sct","concept":[{"code":"1269497006"}]}]}}""",
     FHIR_MODELINFO_401_XML,
-    includedLibrarySources = listOf(S1_SOURCE),
+    includedLibrarySources = listOf(S1_SOURCE, S3_SOURCE),
   )
 }
 
@@ -286,6 +306,28 @@ class S2IncludeResolutionTest {
     check("NoSuchLibrary" in failure.message && "CXCAEligibilityLogic" in failure.message) {
       "Failure should name the unknown library and the known ones: ${failure.message}"
     }
+  }
+
+  @Test
+  fun shouldHoldAllThreeTablesInOneEvaluatorRoutedByReference() = runTest {
+    // S3 is neither the entry library nor included by anything — only the reference reaches it.
+    // One evaluator, the whole DAK, PlanDefinitions choosing their library per expression.
+    val hpvPositive =
+      resource(
+        """{"resourceType":"Observation","id":"obs-hpv-s2","status":"final",
+           "code":{"coding":[{"system":"http://snomed.info/sct","code":"1269497006"}]},
+           "subject":{"reference":"Patient/s2"}}"""
+      )
+    val result =
+      evaluate(
+        "Screening result recommendation status",
+        observations = listOf(hpvPositive),
+        reference = "http://smart.who.int/cxca/Library/CXCAScreeningResultLogic",
+      )
+    assertEquals(
+      "Refer for triage/treatment",
+      (result as? EvaluationResult.Values)?.value?.singleOrNull(),
+    )
   }
 
   // ---- End to end: $apply carries Expression.reference through the patched seam ----

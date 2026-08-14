@@ -1,0 +1,36 @@
+{
+    "resourceType": "PlanDefinition",
+    "id": "CXCAS3DTCql",
+    "url": "http://hopena.health/cxca-kmp/PlanDefinition/CXCAS3DTCql",
+    "name": "CXCAS3DTCql",
+    "title": "CXCA.S3.DT Act on a cervical cancer screening result (CQL)",
+    "status": "active",
+    "experimental": true,
+    "description": "The S3 decision table evaluated as REAL CQL: CXCAScreeningResultLogic (near-verbatim from the DAK) interprets an explicit HPV-DNA result — positive refers for triage/treatment, negative re-screens at interval, invalid repeats the test. Each dynamicValue expression carries Expression.reference, the Library canonical.",
+    "action": [
+        {
+            "id": "s3-communicate-result-cql",
+            "title": "Communicate the screening-result action to the health worker",
+            "textEquivalent": "Determine the action indicated by the screening result (CQL) and communicate it",
+            "definitionCanonical": "http://hopena.health/cxca-kmp/ActivityDefinition/CommunicateScreeningResult",
+            "dynamicValue": [
+                {
+                    "path": "reasonCode[0].text",
+                    "expression": {
+                        "language": "text/cql",
+                        "expression": "Screening result recommendation status",
+                        "reference": "http://smart.who.int/cxca/Library/CXCAScreeningResultLogic"
+                    }
+                },
+                {
+                    "path": "payload[0].contentString",
+                    "expression": {
+                        "language": "text/cql",
+                        "expression": "Guidance",
+                        "reference": "http://smart.who.int/cxca/Library/CXCAScreeningResultLogic"
+                    }
+                }
+            ]
+        }
+    ]
+}

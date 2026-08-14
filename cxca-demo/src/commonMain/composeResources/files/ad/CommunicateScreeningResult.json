@@ -1,0 +1,14 @@
+{
+    "resourceType": "ActivityDefinition",
+    "id": "CommunicateScreeningResult",
+    "url": "http://hopena.health/cxca-kmp/ActivityDefinition/CommunicateScreeningResult",
+    "name": "CommunicateScreeningResult",
+    "title": "Communicate the action indicated by a cervical cancer screening result",
+    "status": "active",
+    "experimental": true,
+    "description": "Communicate the CXCA.S3.DT screening-result determination and its guidance to the health worker.",
+    "kind": "CommunicationRequest",
+    "profile": "http://hl7.org/fhir/uv/cpg/StructureDefinition/cpg-communicationrequest",
+    "intent": "proposal",
+    "priority": "routine"
+}

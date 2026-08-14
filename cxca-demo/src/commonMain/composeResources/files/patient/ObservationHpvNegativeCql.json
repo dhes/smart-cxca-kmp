@@ -1,0 +1,18 @@
+{
+    "resourceType": "Observation",
+    "id": "cxca-cql-hpv-neg-45-hpv-result",
+    "status": "final",
+    "code": {
+        "coding": [
+            {
+                "system": "http://snomed.info/sct",
+                "code": "1269499009",
+                "display": "High risk human papillomavirus deoxyribonucleic acid not detected (finding)"
+            }
+        ]
+    },
+    "effectiveDateTime": "2026-07-20",
+    "subject": {
+        "reference": "Patient/cxca-cql-hpv-neg-45"
+    }
+}

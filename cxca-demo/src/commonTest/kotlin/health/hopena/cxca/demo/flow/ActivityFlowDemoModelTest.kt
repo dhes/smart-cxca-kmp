@@ -202,6 +202,26 @@ class ActivityFlowDemoModelTest {
   }
 
   @Test
+  fun shouldDetermineTheResultActionViaTheS3Cql() = runTest {
+    // CXCA.S3.DT: standalone result interpretation — positive refers, negative re-screens,
+    // invalid repeats the test. Completes the screen-triage-treat arc: all three DAK decision
+    // tables now run as CQL on the KMP stack.
+    if (!cqlSupported) return@runTest
+
+    val (posStatus, posGuidance) = determination(HPV_POSITIVE_45_CQL)
+    assertEquals("Refer for triage/treatment", posStatus)
+    assertTrue(posGuidance.contains("refer the client for triage and treatment"))
+
+    val (negStatus, negGuidance) = determination(HPV_NEGATIVE_45_CQL)
+    assertEquals("Rescreen at interval", negStatus)
+    assertTrue(negGuidance.contains("re-screen at the recommended interval"))
+
+    val (invStatus, invGuidance) = determination(HPV_INVALID_45_CQL)
+    assertEquals("Repeat test", invStatus)
+    assertTrue(invGuidance.contains("repeat the HPV-DNA test"))
+  }
+
+  @Test
   fun shouldDetermineNotEligibleWhenGeneralPopulationAge27() = runTest {
     // General population start age is 30; 27 is below it.
     val (status, guidance) = determination(GENERAL_27)
