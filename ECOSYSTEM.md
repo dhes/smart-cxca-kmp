@@ -31,21 +31,33 @@ upstream PR pending).
 
 ## The content this app executes
 
-- `dhes/smart-cxca` (a skeletal WHO-style cervical-cancer SMART IG) — the source of truth:
-  decision tables authored in CQL (e.g. `CXCAEligibilityLogic`).
-- This repo re-authors the CXCA.S1.DT eligibility logic as **FHIRPath**
-  (`cxca-demo/src/commonMain/composeResources/files/pd/CXCAS1DT.json`),
-  because the KMP workflow library evaluates `text/fhirpath` only — there is
-  no KMP CQL/ELM evaluator yet. The re-authoring is verified against the CQL
-  semantics by the truth-table tests in `ActivityFlowDemoModelTest`.
+- `dhes/smart-cxca` (a skeletal WHO-style cervical-cancer SMART IG, now public) — the
+  source of truth: the three decision tables authored in CQL
+  (`CXCAEligibilityLogic`, `CXCADueForScreeningLogic`, `CXCAScreeningResultLogic`).
+- All three tables run here as **near-verbatim CQL** through `cxca-cql`, the
+  `ExpressionEvaluator` implementation over the cqframework v5 KMP engine. S2
+  `include`s S1 (multi-library resolution), and every CQL dynamicValue carries
+  `Expression.reference` so the evaluator addresses the right library.
+- The CXCA.S1.DT logic ALSO exists re-authored as **FHIRPath**
+  (`cxca-demo/src/commonMain/composeResources/files/pd/CXCAS1DT.json`) —
+  originally a workaround from when no KMP CQL evaluator existed, kept as the
+  all-platform path (iOS has no CQL engine yet) and as a side-by-side
+  comparison. Truth-table tests in `ActivityFlowDemoModelTest` hold both
+  evaluations to the same semantics.
 
 ## The legacy stack (for comparison)
 
 - google android-fhir (legacy JVM-only Android SDK) — runs the same DAK
   content with full CQL, via `dhes/smart-cxca-android` (legacy demo app).
-- `cqframework/clinical_quality_language` (CQL spec + cql-to-elm translator)
-  and `cqframework/clinical-reasoning` (CQL/measure/`$apply` operations) —
-  the JVM libraries that give the legacy stack its CQL execution. A planned
-  Phase 2 plugs them into the workflow library's `ExpressionEvaluator` seam
-  so verbatim WHO CQL runs on JVM targets (Android/desktop), while FHIRPath
-  remains the all-platform path.
+- `cqframework/clinical_quality_language` (CQL spec + translator + evaluator) —
+  no longer legacy-only: the translator and engine went Kotlin Multiplatform in
+  v5, and this repo consumes them directly (jvm/wasmJs targets, via the PR
+  #1815 `kmp-fhir-providers` branch). What was once "a planned Phase 2" is
+  done: `cxca-cql` plugs the v5 engine into the workflow seam, and verbatim
+  WHO-idiom CQL runs on Android, desktop, and wasm — FHIRPath remains the
+  all-platform path.
+- `cqframework/clinical-reasoning` (CQL/measure/`$apply` operations) — still
+  the JVM/HAPI operations layer behind the legacy stack, but in motion: its
+  `cqf-fhir-cql` module is being converted to Kotlin upstream (PR #1080),
+  wired to the KMP engine's `engine-fhir` module. The two stacks this repo
+  bridges by hand are beginning to converge upstream.
