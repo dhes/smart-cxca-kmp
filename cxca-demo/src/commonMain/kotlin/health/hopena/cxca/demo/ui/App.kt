@@ -128,10 +128,10 @@ fun App(platformContext: Any = Unit) {
 private fun DemoTopBar(selected: DemoConfiguration, onSelect: (DemoConfiguration) -> Unit) {
   var menuOpen by remember { mutableStateOf(false) }
   TopAppBar(
-    title = { Text("SMART CxCa S1 (KMP)") },
+    title = { Text("SMART CxCa (KMP)") },
     actions = {
       IconButton(onClick = { menuOpen = true }) {
-        Icon(Icons.Default.MoreVert, contentDescription = "Eligibility scenarios")
+        Icon(Icons.Default.MoreVert, contentDescription = "Decision-table scenarios")
       }
       DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
         DEMO_CONFIGURATIONS.forEach { config ->
