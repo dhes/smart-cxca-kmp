@@ -1,3 +1,1 @@
-{"resourceType":"ValueSet","id":"absence-of-cervix","status":"active",
- "url":"http://smart.who.int/cxca/ValueSet/absence-of-cervix",
- "compose":{"include":[{"system":"http://snomed.info/sct","concept":[{"code":"37687000"}]}]}}
+{"resourceType":"ValueSet","id":"absence-of-cervix","status":"active","url":"http://smart.who.int/cxca/ValueSet/absence-of-cervix","compose":{"include":[{"system":"http://snomed.info/sct","concept":[{"code":"37687000","display":"Congenital absence of cervix"},{"code":"428078001","display":"History of total hysterectomy (situation)"}]}]}}

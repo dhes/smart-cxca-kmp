@@ -1,18 +1,33 @@
-/*
- CXCA.S2.DT — Determine whether cervical cancer screening is due.
+/**
+Library: CXCA.S2.DT Due-for-Screening Logic
 
- Near-verbatim from the DAK source (dhes/smart-cxca input/cql/CXCADueForScreeningLogic.cql),
- with the same two deviations as the S1 port: explicit .value access in place of the
- FHIRHelpers include, and nothing else. 'Due' is the care gap: eligible (per the included
- CXCA.S1 library) AND not screened within the recommended interval — 3 years for women
- living with HIV, 5 years for the general population (WHO 2021 screen-triage-treat).
+@DecisionID: CXCA.S2.DT
+@BusinessRule: Determine whether cervical cancer screening is due
+@Trigger: CXCA.S2 Determine whether cervical cancer screening is due
+@HitPolicy: First
+@Description: GIVEN a client in the screening-eligible cohort (the Denominator -- see
+CXCA.S1 CXCAEligibilityLogic, which already applies the cervix and HIV-dependent age
+criteria), determine whether cervical cancer screening is due now, per the WHO 2021
+screen-triage-treat guideline. 'Due' is the care gap = Denominator AND NOT Numerator: the
+client is eligible AND has NOT been screened within the recommended interval. The interval
+is the only condition decided here -- 5 years for the general population, 3 years for women
+living with HIV (the most aggressive WHO-recommended intervals). A non-eligible client
+yields 'Not applicable'.
+
+Data Concepts:
+ * CXCA.DE.HIVStatus: HIV status | Whether the client is living with HIV (sets the re-screen interval: 3y WLHIV, 5y general)
+ * CXCA.DE.LastScreenDate: Date of last cervical cancer screening test
+
+WHO guideline for screening and treatment of cervical pre-cancer lesions for cervical cancer prevention, 2nd ed. (2021).
 */
-library CXCADueForScreeningLogic version '0.1.0'
+library CXCADueForScreeningLogic
 
 using FHIR version '4.0.1'
 
-include CXCAEligibilityLogic version '1.0.0' called Eligibility
+include FHIRHelpers version '4.0.1'
+include CXCAEligibilityLogic called Eligibility
 
+// Terminology is bound in the DAK terminology layer; referenced here by canonical.
 valueset "HIV-positive status": 'http://smart.who.int/cxca/ValueSet/hiv-positive-status'
 valueset "Cervical cancer screening test": 'http://smart.who.int/cxca/ValueSet/cervical-cancer-screening-test'
 
@@ -27,12 +42,20 @@ define "Eligible":
 
 // ---- Inputs ----
 
+/*
+ @input: "HIV status"
+ @pseudocode: 'HIV status' = 'HIV-positive'
+ */
 define "Living with HIV":
   exists (
     [Observation: "HIV-positive status"] O
-      where O.status.value in { 'final', 'amended' }
+      where O.status in { 'final', 'amended' }
   )
 
+/*
+ @input: "Time since last cervical screen"
+ @pseudocode: latest 'Date of cervical cancer screening test'
+ */
 define "Last Cervical Screen Date":
   Max(
     [Observation: "Cervical cancer screening test"] O
@@ -46,6 +69,8 @@ define "Years Since Last Screen":
 define "No Previous Screen":
   "Last Cervical Screen Date" is null
 
+// Interval is met (i.e. screening IS due) when there is no previous screen
+// or the last screen was at/over the recommended interval for the client's HIV status.
 define "Screening Interval Elapsed":
   if "Living with HIV"
     then "No Previous Screen" or "Years Since Last Screen" >= 3
@@ -53,11 +78,17 @@ define "Screening Interval Elapsed":
 
 // ---- Output: screening recommendation status (hitPolicy FIRST) ----
 
+/*
+ @output: "Screening recommendation status"
+ */
 define "Screening recommendation status":
   if not "Eligible" then 'Not applicable'
   else if "Screening Interval Elapsed" then 'Due'
   else 'Not due'
 
+/*
+ @output: "Guidance displayed to health worker"
+ */
 define "Guidance":
   case
     when not "Eligible" then 'Client is not in the screening target population; due-for-screening does not apply.'

@@ -177,7 +177,8 @@ class ActivityFlowDemoModelTest {
 
     val (hystStatus, hystGuidance) = determination(HYSTERECTOMY_45_CQL)
     assertEquals("Not eligible", hystStatus)
-    assertTrue(hystGuidance.contains("no cervix on record"))
+    // Verbatim DAK guidance text (the ported variant said "no cervix on record").
+    assertTrue(hystGuidance.contains("Client has no cervix"))
   }
 
   @Test

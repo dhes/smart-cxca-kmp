@@ -1,3 +1,0 @@
-{"resourceType":"ValueSet","id":"total-hysterectomy","status":"active",
- "url":"http://smart.who.int/cxca/ValueSet/total-hysterectomy",
- "compose":{"include":[{"system":"http://snomed.info/sct","concept":[{"code":"428078001"}]}]}}

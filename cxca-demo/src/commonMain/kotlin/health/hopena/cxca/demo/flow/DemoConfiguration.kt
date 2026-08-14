@@ -107,11 +107,13 @@ val HYSTERECTOMY_45 =
 private val CXCA_S1_CQL_SCENARIO =
   CqlScenario(
     cqlLibraryPath = "files/cql/CXCAEligibilityLogic.cql",
+    // Verbatim DAK source: one absence-of-cervix ValueSet (congenital + hysterectomy codes),
+    // FHIRHelpers included for the implicit FHIR->System conversions.
+    includedLibraryPaths = listOf("files/cql/FHIRHelpers.cql"),
     valueSetPaths =
       listOf(
         "files/vs/hiv-positive-status.json",
         "files/vs/absence-of-cervix.json",
-        "files/vs/total-hysterectomy.json",
       ),
   )
 
@@ -154,12 +156,12 @@ val HYSTERECTOMY_45_CQL =
 private val CXCA_S2_CQL_SCENARIO =
   CqlScenario(
     cqlLibraryPath = "files/cql/CXCADueForScreeningLogic.cql",
-    includedLibraryPaths = listOf("files/cql/CXCAEligibilityLogic.cql"),
+    includedLibraryPaths =
+      listOf("files/cql/CXCAEligibilityLogic.cql", "files/cql/FHIRHelpers.cql"),
     valueSetPaths =
       listOf(
         "files/vs/hiv-positive-status.json",
         "files/vs/absence-of-cervix.json",
-        "files/vs/total-hysterectomy.json",
         "files/vs/cervical-cancer-screening-test.json",
       ),
   )
@@ -227,6 +229,7 @@ val WLHIV_DUE_45_CQL =
 private val CXCA_S3_CQL_SCENARIO =
   CqlScenario(
     cqlLibraryPath = "files/cql/CXCAScreeningResultLogic.cql",
+    includedLibraryPaths = listOf("files/cql/FHIRHelpers.cql"),
     valueSetPaths =
       listOf(
         "files/vs/hpv-positive-result.json",

@@ -93,9 +93,15 @@ class CqlExpressionEvaluator(
   }
 
   private fun parseLibraryDeclaration(source: String): VersionedIdentifier {
+    // Strip comments first: a header comment saying e.g. "This library defines functions"
+    // (FHIRHelpers' does) must not be mistaken for the declaration.
+    val code =
+      source
+        .replace(Regex("""/\*.*?\*/""", RegexOption.DOT_MATCHES_ALL), "")
+        .replace(Regex("""//.*"""), "")
     val match =
-      Regex("""library\s+(\w+)(?:\s+version\s+'([^']+)')?""").find(source)
-        ?: error("CQL source has no library declaration")
+      Regex("""^\s*library\s+(\w+)(?:\s+version\s+'([^']+)')?""", RegexOption.MULTILINE)
+        .find(code) ?: error("CQL source has no library declaration")
     return VersionedIdentifier().withId(match.groupValues[1]).withVersion(
       match.groupValues[2].ifEmpty { null }
     )
