@@ -98,6 +98,8 @@ kotlin {
   sourceSets {
     commonMain.dependencies {
       implementation("dev.ohs.fhir:workflow:2.0.0-alpha01")
+      // Template-based extraction (QR -> resources): the capture leg of the demo.
+      implementation("dev.ohs.fhir:fhir-data-capture:2.0.0-alpha02")
       implementation(libs.ohs.fhir.model)
       implementation(libs.kotlinx.coroutines.core)
       implementation(libs.kotlinx.datetime)
@@ -135,6 +137,8 @@ kotlin {
     commonTest.dependencies {
       implementation(libs.kotlin.test)
       implementation(libs.kotlinx.coroutines.test)
+      // Direct FHIRPath access for the capture-leg diagnostics.
+      implementation("dev.ohs.fhir:fhir-path:1.0.0-beta03")
     }
   }
 }
