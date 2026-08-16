@@ -6,3 +6,6 @@ local.properties
 .idea/
 *.iml
 .kotlin/
+
+# Xcode per-user state
+xcuserdata/

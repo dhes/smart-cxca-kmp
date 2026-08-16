@@ -50,7 +50,7 @@ One upstream mapping retires the hack. Details in [ECOSYSTEM.md](ECOSYSTEM.md).
 | Android | ✅ | ✅ | |
 | Desktop (JVM) | ✅ | ✅ | |
 | Web (wasmJs) | ✅ | ✅ | |
-| iOS | ⚠️ | ➖ | shared modules compile for iOS targets, but no Xcode host app is bundled here yet; CQL additionally waits on cqframework Kotlin/Native targets |
+| iOS | ✅ | ➖ | FHIRPath scenarios run in the bundled `iosApp` Xcode host; CQL waits on cqframework Kotlin/Native targets (CQL scenarios are hidden on iOS) |
 
 ## Modules
 
@@ -90,9 +90,17 @@ Then:
 ./gradlew :cxca-cql:desktopTest :cxca-cql:wasmJsNodeTest   # truth tables, both engines
 ```
 
-There is no bundled iOS host app yet — the iOS source sets compile, and a host
-scaffold is planned; CQL scenarios will remain hidden on iOS either way until
-the engine gains native targets.
+iOS: open `iosApp/iosApp.xcodeproj` in Xcode and Run, or from the CLI:
+
+```
+cd iosApp && xcodebuild -project iosApp.xcodeproj -scheme iosApp \
+  -destination 'generic/platform=iOS Simulator' build
+```
+
+The Xcode build embeds the `CxcaDemoKit` framework via a Gradle run-script
+phase. The simulator build is arm64-only (Compose Multiplatform publishes no
+iosX64 artifacts). CQL scenarios are hidden on iOS until the cqframework
+engine gains Kotlin/Native targets — the FHIRPath scenarios run in full.
 
 ## Status and roadmap
 
