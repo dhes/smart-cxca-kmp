@@ -143,3 +143,7 @@ The full map of repos, layers, and the legacy-stack comparison — including
 `dhes/smart-cxca-android` (legacy demo app), which runs the same DAK content
 with full CQL on the JVM-only Android SDK — lives in
 [ECOSYSTEM.md](ECOSYSTEM.md).
+
+Everything this work surfaced about the stack — 24 findings across five
+layers, each with status and the requirement it implies — is consolidated in
+[FINDINGS.md](FINDINGS.md).
